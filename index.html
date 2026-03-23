@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CF - Cafeteria Food</title>
+<style>
+body { 
+  margin:0; 
+  font-family: Arial,sans-serif; 
+  background: #800080; /* purple background */ 
+  color: white;
+}
+header { 
+  background:#4CAF50; /* green header */ 
+  color:white; 
+  padding:15px; 
+  text-align:center; 
+  position:sticky; 
+  top:0; 
+}
+#backBtn, #basketBtn { 
+  font-size:16px; 
+  padding:8px 12px; 
+  border-radius:8px; 
+  border:none; 
+  cursor:pointer; 
+  background:white; 
+  color:#4CAF50; 
+  margin:5px 0; 
+  display:inline-block;
+}
+.container { 
+  padding:20px; 
+  text-align:center; 
+}
+button.actionBtn { 
+  width:90%; 
+  max-width:300px; 
+  padding:15px; 
+  margin:10px auto; 
+  font-size:18px; 
+  border:none; 
+  border-radius:12px; 
+  background:#4CAF50; 
+  color:white; 
+  display:block; 
+  cursor:pointer; 
+}
+input { 
+  width:90%; 
+  max-width:300px; 
+  padding:15px; 
+  font-size:18px; 
+  border-radius:12px; 
+  border:1px solid #ccc; 
+  margin:10px auto; 
+  text-align:center; 
+}
+.card { 
+  background:white; 
+  color:black;
+  margin:15px auto; 
+  border-radius:12px; 
+  overflow:hidden; 
+  width:95%; 
+  max-width:350px; 
+  box-shadow:0 4px 10px rgba(0,0,0,0.1); 
+}
+.card img { width:100%; height:180px; object-fit:cover; }
+.card h3 { margin:10px; }
+.price { color:#4CAF50; font-weight:bold; }
+#basketPopup { 
+  position:fixed; 
+  bottom:0; 
+  left:0; 
+  right:0; 
+  background:white; 
+  padding:20px; 
+  display:none; 
+  max-height:60%; 
+  overflow-y:auto; 
+  color:black;
+}
+.item { margin:10px 0; }
+#successMsg { display:none; color:green; font-weight:bold; margin-top:15px; }
+</style>
+</head>
+<body>
+
+<header>
+<h2>CF</h2>
+<!-- Buttons under the title -->
+<button id="backBtn" onclick="goBack()">⬅ Back</button>
+<button id="basketBtn" onclick="toggleBasket()">🛒 Basket</button>
+</header>
+
+<div class="container" id="tableScreen">
+<h3>Enter Table Number or Letter</h3>
+<input type="text" id="tableInput" placeholder="e.g. A12">
+<button class="actionBtn" onclick="saveTable()">Continue</button>
+</div>
+
+<div class="container" id="mainMenu" style="display:none;">
+<button class="actionBtn" onclick="selectMeal('breakfast')">Breakfast</button>
+<button class="actionBtn" onclick="selectMeal('lunch')">Lunch</button>
+</div>
+
+<div class="container" id="foodMenu" style="display:none;">
+<div id="foodList"></div>
+</div>
+
+<div id="basketPopup">
+<h3>Your Basket</h3>
+<div id="basketItems"></div>
+<h3 id="total"></h3>
+<button class="actionBtn" onclick="placeOrder()">Order</button>
+<div id="successMsg">Order Successful ✅</div>
+</div>
+
+<script>
+let tableNumber="";
+let basket=[];
+let currentScreen="table";
+let basketOpen=false;
+
+const menus={
+breakfast:[
+{name:"French Toast", price:5, img:"https://images.unsplash.com/photo-1606755962774-5d7b7b8d5b82"},
+{name:"Scrambled Eggs", price:4, img:"https://images.unsplash.com/photo-1620089591984-1c1118f17939"},
+{name:"Breakfast Muffin", price:3, img:"https://images.unsplash.com/photo-1589710756189-c1151b64f8b4"},
+{name:"Cupcake", price:3, img:"https://images.unsplash.com/photo-1589710756189-c1151b64f8b4"}
+],
+lunch:[
+{name:"Chicken Sandwich", price:6, img:"https://images.unsplash.com/photo-1612197525907-d90c09b96b1e"},
+{name:"Veggie Wrap", price:5, img:"https://images.unsplash.com/photo-1598514983033-d0c7f42e6083"},
+{name:"Grilled Salmon", price:12, img:"https://images.unsplash.com/photo-1604908177525-50d1a7f3a44c"}
+]
+};
+
+function saveTable(){
+const input=document.getElementById("tableInput").value.trim();
+if(!input) return alert("Enter table number or letter");
+tableNumber=input;
+document.getElementById("tableScreen").style.display="none";
+document.getElementById("mainMenu").style.display="block";
+currentScreen="menu";
+document.getElementById("backBtn").style.display="inline-block";
+}
+
+function selectMeal(meal){
+document.getElementById("mainMenu").style.display="none";
+document.getElementById("foodMenu").style.display="block";
+const list=document.getElementById("foodList");
+list.innerHTML="";
+menus[meal].forEach(item=>{
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<img src="${item.img}">
+<h3>${item.name}</h3>
+<div class="price">$${item.price}</div>
+<button class="actionBtn" onclick='addToBasket(${JSON.stringify(item)})'>Add to Basket</button>
+`;
+list.appendChild(card);
+});
+currentScreen="food";
+}
+
+function addToBasket(item){
+basket.push(item);
+alert(item.name+" added 🛒");
+}
+
+function toggleBasket(){
+if(basketOpen){
+document.getElementById("basketPopup").style.display="none";
+basketOpen=false;
+document.getElementById("successMsg").style.display="none";
+} else {
+const container=document.getElementById("basketItems");
+container.innerHTML="";
+let total=0;
+basket.forEach(item=>{
+total+=item.price;
+const div=document.createElement("div");
+div.className="item";
+div.innerText=item.name+" - $"+item.price;
+container.appendChild(div);
+});
+document.getElementById("total").innerText="Total: $"+total;
+document.getElementById("basketPopup").style.display="block";
+basketOpen=true;
+currentScreen="basket";
+document.getElementById("successMsg").style.display="none";
+}
+}
+
+function placeOrder(){
+if(basket.length===0) {
+alert("Basket is empty");
+return;
+}
+document.getElementById("successMsg").style.display="block";
+basket=[];
+document.getElementById("basketItems").innerHTML="";
+document.getElementById("total").innerText="Total: $0";
+}
+
+function goBack(){
+document.getElementById("tableScreen").style.display="block";
+document.getElementById("mainMenu").style.display="none";
+document.getElementById("foodMenu").style.display="none";
+document.getElementById("basketPopup").style.display="none";
+document.getElementById("backBtn").style.display="inline-block";
+basket=[];
+basketOpen=false;
+currentScreen="table";
+document.getElementById("successMsg").style.display="none";
+}
+</script>
+
+</body>
+</html>
