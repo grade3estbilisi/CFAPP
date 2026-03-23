@@ -157,10 +157,10 @@ menus[meal].forEach(item=>{
 const card=document.createElement("div");
 card.className="card";
 card.innerHTML=`
-<img src="${item.img}">
+<img src="GEL{item.img}">
 <h3>${item.name}</h3>
-<div class="price">$${item.price}</div>
-<button class="actionBtn" onclick='addToBasket(${JSON.stringify(item)})'>Add to Basket</button>
+<div class="price">GEL{item.price}</div>
+<button class="actionBtn" onclick='addToBasket(GEL{JSON.stringify(item)})'>Add to Basket</button>
 `;
 list.appendChild(card);
 });
